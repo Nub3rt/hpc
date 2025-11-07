@@ -1,0 +1,4 @@
+Greetings from main process (0)! Num of processes: 4
+Greetings from process 1 of 4!
+Greetings from process 2 of 4!
+Greetings from process 3 of 4!
