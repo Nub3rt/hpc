@@ -14,7 +14,11 @@ module load mpich-3.2
 if [[ "${filename}.c" -nt "${filename}.out" ]]; then
   mpicc -g -Wall -std=gnu99 "${filename}.c" -o "${filename}.out"
 fi
-mpirun.actual -n 4 "./${filename}.out"
+if [[ -f "${filename}.in" ]]; then
+  mpirun.actual -n 4 "./${filename}.out" < "${filename}.in"
+else
+  mpirun.actual -n 4 "./${filename}.out"
+fi
 
 # qsub base.sh | xargs -I {} watch "tracejob {}"
 
