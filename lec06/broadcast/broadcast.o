@@ -1,0 +1,4 @@
+Main process broadcasting data = 42...
+Process 1 received data = 42
+Process 2 received data = 42
+Process 3 received data = 42
