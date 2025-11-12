@@ -12,7 +12,7 @@ args=""
 cd $PBS_O_WORKDIR
 
 if [[ "${filename}.c" -nt "${filename}.out" ]]; then
-  gcc -g -Wall -fopenmp "${filename}.c" -o "${filename}.out"
+  gcc -g -Wall -std=gnu99 -fopenmp "${filename}.c" -o "${filename}.out"
 fi
 
 if [[ -f "${filename}.in" ]]; then
