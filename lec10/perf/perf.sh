@@ -2,7 +2,7 @@
 
 #PBS -l select=2:ncpus=1:mem=2gb -l place=pack
 #PBS -l walltime=0:01:00
-#PBS -q short_cpuQ
+#PBS -q shortCPUQ
 
 #PBS -o perf.o
 #PBS -e perf.e
@@ -10,15 +10,15 @@ filename="perf"
 
 cd $PBS_O_WORKDIR
 
-module load mpich-3.2
+module load -s OpenMPI/4.1.1-GCC-11.2.0
 if [[ "${filename}.c" -nt "${filename}.out" ]]; then
-  mpicc -g -Wall -std=gnu99 "${filename}.c" -o "${filename}.out"
+  mpicc -Wall "${filename}.c" -o "${filename}.out"
 fi
 if [[ -f "${filename}.in" ]]; then
-  mpirun.actual -n 2 "./${filename}.out" < "${filename}.in"
+  mpirun -n 2 "./${filename}.out" < "${filename}.in"
 else
-  mpirun.actual -n 2 "./${filename}.out"
+  mpirun -n 2 "./${filename}.out"
 fi
 
-# qsub perf.sh | xargs -I {} watch "tracejob {}"
+# qsub perf.sh | xargs -I {} watch "qstat -f {}"
 

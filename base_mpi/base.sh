@@ -2,7 +2,7 @@
 
 #PBS -l select=1:ncpus=4:mem=2gb
 #PBS -l walltime=0:00:10
-#PBS -q short_cpuQ
+#PBS -q shortCPUQ
 
 #PBS -o base.o
 #PBS -e base.e
@@ -10,15 +10,15 @@ filename="base"
 
 cd $PBS_O_WORKDIR
 
-module load mpich-3.2
+module load -s OpenMPI/4.1.1-GCC-11.2.0
 if [[ "${filename}.c" -nt "${filename}.out" ]]; then
-  mpicc -g -Wall -std=gnu99 "${filename}.c" -o "${filename}.out"
+  mpicc -Wall "${filename}.c" -o "${filename}.out"
 fi
 if [[ -f "${filename}.in" ]]; then
-  mpirun.actual -n 4 "./${filename}.out" < "${filename}.in"
+  mpirun -n 4 "./${filename}.out" < "${filename}.in"
 else
-  mpirun.actual -n 4 "./${filename}.out"
+  mpirun -n 4 "./${filename}.out"
 fi
 
-# qsub base.sh | xargs -I {} watch "tracejob {}"
+# qsub base.sh | xargs -I {} watch "qstat -f {}"
 

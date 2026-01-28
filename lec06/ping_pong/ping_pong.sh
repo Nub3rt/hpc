@@ -2,7 +2,7 @@
 
 #PBS -l select=1:ncpus=2:mem=2gb
 #PBS -l walltime=0:00:10
-#PBS -q short_cpuQ
+#PBS -q shortCPUQ
 
 #PBS -o ping_pong.o
 #PBS -e ping_pong.e
@@ -10,11 +10,11 @@ filename="ping_pong"
 
 cd $PBS_O_WORKDIR
 
-module load mpich-3.2
+module load -s OpenMPI/4.1.1-GCC-11.2.0
 if [[ "${filename}.c" -nt "${filename}.out" ]]; then
-  mpicc -g -Wall -std=gnu99 "${filename}.c" -o "${filename}.out"
+  mpicc -Wall "${filename}.c" -o "${filename}.out"
 fi
-mpirun.actual -n 2 "./${filename}.out"
+mpirun -n 2 "./${filename}.out"
 
-# qsub ping_pong.sh | xargs -I {} watch "tracejob {}"
+# qsub ping_pong.sh | xargs -I {} watch "qstat -f {}"
 

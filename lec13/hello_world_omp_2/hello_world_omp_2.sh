@@ -2,7 +2,7 @@
 
 #PBS -l select=1:ncpus=4:mem=2gb
 #PBS -l walltime=0:00:10
-#PBS -q short_cpuQ
+#PBS -q shortCPUQ
 
 #PBS -o hello_world_omp_2.o
 #PBS -e hello_world_omp_2.e
@@ -21,5 +21,5 @@ else
   "./${filename}.out" $args
 fi
 
-# qsub hello_world_omp_2.sh | xargs -I {} watch "tracejob {}"
+# qsub hello_world_omp_2.sh | xargs -I {} watch "qstat -f {}"
 

@@ -2,7 +2,7 @@
 
 #PBS -l select=1:ncpus=4:mem=2gb
 #PBS -l walltime=0:00:10
-#PBS -q short_cpuQ
+#PBS -q shortCPUQ
 
 #PBS -o trap_4.o
 #PBS -e trap_4.e
@@ -12,7 +12,7 @@ args="1"
 cd $PBS_O_WORKDIR
 
 if [[ "${filename}.c" -nt "${filename}.out" ]]; then
-  gcc -g -Wall -std=gnu99 -fopenmp "${filename}.c" -o "${filename}.out"
+  gcc -Wall -fopenmp "${filename}.c" -o "${filename}.out"
 fi
 
 if [[ -f "${filename}.in" ]]; then
@@ -21,5 +21,5 @@ else
   "./${filename}.out" $args
 fi
 
-# qsub trap_4.sh | xargs -I {} watch "tracejob {}"
+# qsub trap_4.sh | xargs -I {} watch "qstat -f {}"
 
