@@ -8,12 +8,16 @@ const double DEG2RAD = 3.1419 / 180.0;
 
 int main( int argc, char** argv ) {
   if ( argc < 3 ) {
-    printf( "usage: hough_transform.out <img_path> <theta_multiplier> [<print>]\n" );
+    printf( "usage: %s <img_path> <theta_multiplier> [<print>]\n", argv[ 0 ] );
     return 1;
   }
 
   int w, h;
   unsigned char* img = stbi_load( argv[ 1 ], &w, &h, NULL, 1 );
+  if ( img == NULL ) {
+    printf( "Failed to load image: %s\n", argv[ 1 ] );
+    return 2;
+  }
 
   int center_x = w / 2;
   int center_y = h / 2;
@@ -91,10 +95,12 @@ int main( int argc, char** argv ) {
     }
   }
 
-  printf( "%i lines:\n", count );
-  if ( argc > 3 && atoi( argv[ 3 ] ) )
+
+  if ( argc > 3 && atoi( argv[ 3 ] ) ) {
+    printf( "%i lines:\n", count );
     for ( int i = 0; i < count; ++i )
       printf( "rho = %5i, theta = %6.2f\n", rs[ i ], ts[ i ] );
+  }
 
   stbi_image_free( img );
   free( acc );

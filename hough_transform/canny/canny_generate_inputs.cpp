@@ -8,7 +8,7 @@
 
 int main( int argc, char** argv ) {
   if ( argc < 4 ) {
-    std::cout << "usage: canny_generate_inputs.out <n_edges> <most_edges> <scaledown_count>\n";
+    std::cout << "usage: " << argv[ 0 ] << " <n_edges> <most_edges> <scaledown_count>\n";
     return( 1 );
   }
 

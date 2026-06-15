@@ -1,6 +1,8 @@
 # PBS and compilation
 *.o
 *.e
+*.o.*
+*.e.*
 *.out
 
 # Images
