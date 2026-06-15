@@ -10,8 +10,8 @@ usage() {
     echo "  img_path          : image path (mandatory)"
     echo "  theta_multiplier  : theta multiplier value (mandatory)"
     echo "  -w                : watch job after submission"
-    echo "  -t                : executable prints time"
-    echo "  -l                : executable prints lines"
+    echo "  -t                : executable prints time (this or -l)"
+    echo "  -l                : executable prints lines (this or -t)"
     echo
     exit 1
 }

@@ -6,33 +6,26 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../libs/stb_image.h"
 
+static const int RUN_COUNT = 20;
+
 static const double DEG2RAD = 3.1419 / 180.0;
 static const double PEAK_THRESHOLD_RATIO = 0.8;
 
-int main( int argc, char** argv ) {
-  MPI_Init( NULL, NULL );
-
+void hough_transform( char* img_path, int t_mult, int print_times, int print_lines ) {
   int size, rank;
   MPI_Comm_size( MPI_COMM_WORLD, &size );
   MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 
-  if ( argc < 3 ) {
-    printf( "usage: %s <img_path> <theta_multiplier> [<print_time>] [<print_lines>]\n", argv[ 0 ] );
-    MPI_Abort( MPI_COMM_WORLD, 1 );
-  }
 
   int w, h;
   unsigned char* img = NULL;
 
-  int t_mult;
-
   // Read inputs
   if ( rank == 0 ) {
-    img = stbi_load( argv[ 1 ], &w, &h, NULL, 1 );
-    t_mult = atoi( argv[ 2 ] );
+    img = stbi_load( img_path, &w, &h, NULL, 1 );
 
     if ( img == NULL ) {
-      printf( "Failed to load image: %s\n", argv[ 1 ] );
+      printf( "Failed to load image: %s\n", img_path );
       MPI_Abort( MPI_COMM_WORLD, 2 );
     }
   }
@@ -40,7 +33,6 @@ int main( int argc, char** argv ) {
   // Broadcast dimensions & theta multiplier
   MPI_Bcast( &w, 1, MPI_INT, 0, MPI_COMM_WORLD );
   MPI_Bcast( &h, 1, MPI_INT, 0, MPI_COMM_WORLD );
-  MPI_Bcast( &t_mult, 1, MPI_INT, 0, MPI_COMM_WORLD );
 
   int* counts = malloc( size * sizeof( int ) );
   int* displs = malloc( size * sizeof( int ) );
@@ -88,6 +80,10 @@ int main( int argc, char** argv ) {
   int* acc = calloc( acc_h * acc_w, sizeof( int ) );
 
 
+MPI_Barrier( MPI_COMM_WORLD );
+double _time_vote_start = MPI_Wtime(); // == _time_run_start
+
+
   // Voting phase
   for ( int local_y = 0; local_y < local_rows; ++local_y ) {
     for ( int x = 0; x < w; ++x ) {
@@ -103,6 +99,11 @@ int main( int argc, char** argv ) {
       }
     }
   }
+
+
+MPI_Barrier( MPI_COMM_WORLD );
+double _time_vote_end = MPI_Wtime();
+
 
   // Collect accumulators
   MPI_Allreduce(
@@ -153,6 +154,11 @@ int main( int argc, char** argv ) {
   double* ts = malloc( root_mult * max_count * sizeof( double ) );
   int count = 0;
 
+
+MPI_Barrier( MPI_COMM_WORLD );
+double _time_peaks_start = MPI_Wtime();
+
+
   // Select local maxima
   // we are reusing start_r and end_r from the global maximum search
   for ( int r = start_r; r < end_r; ++r ) {
@@ -188,6 +194,11 @@ int main( int argc, char** argv ) {
       }
     }
   }
+
+
+MPI_Barrier( MPI_COMM_WORLD );
+double _time_peaks_end = MPI_Wtime();
+
 
   // Send back the count of maxima we found to root
 
@@ -236,20 +247,29 @@ int main( int argc, char** argv ) {
       MPI_COMM_WORLD
   );
 
+  double _time_run_end = MPI_Wtime();
+
 
   if ( rank == 0 ) {
     for ( int i = 1; i < size; ++i )
       count += counts[ i ]; // total number of lines found
 
-    if ( argc > 3 && atoi( argv[ 3 ] ) ) {
-      // print time
-    }
-
-    if ( argc > 4 && atoi( argv[ 4 ] ) ) {
+    if ( print_lines ) {
       printf( "%i lines:\n", count );
       for ( int i = 0; i < count; ++i )
         printf( "rho = %5i, theta = %6.2f\n", rs[ i ], ts[ i ] );
     }
+
+    if ( print_times )
+      // run_start,run_end,vote_start,vote_end,peaks_start,peaks_end
+      printf( "%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
+          _time_vote_start, // == _time_run_start
+          _time_run_end,
+          _time_vote_start,
+          _time_vote_end,
+          _time_peaks_start,
+          _time_peaks_end
+      );
   }
 
 
@@ -262,6 +282,40 @@ int main( int argc, char** argv ) {
   free( acc );
   free( rs );
   free( ts );
+
+  return;
+}
+
+int main( int argc, char** argv ) {
+  MPI_Init( NULL, NULL );
+
+  if ( argc < 3 ) {
+    printf( "usage: %s <img_path> <theta_multiplier> [<print_time>] [<print_lines>]\n", argv[ 0 ] );
+    MPI_Abort( MPI_COMM_WORLD, 1 );
+  }
+
+  char* img_path = argv[ 1 ];
+  int theta_multiplier = atoi( argv[ 2 ] );
+
+  int size, rank;
+  MPI_Comm_size( MPI_COMM_WORLD, &size );
+  MPI_Comm_rank( MPI_COMM_WORLD, &rank );
+
+
+  int print_times = 0;
+  int print_lines = 0;
+
+  if ( rank == 0 ) {
+    print_times =                 argc > 3 && atoi( argv[ 3 ] );
+    print_lines = !print_times && argc > 4 && atoi( argv[ 4 ] );
+
+    if ( print_times )
+      printf( "run_start,run_end,vote_start,vote_end,peaks_start,peaks_end\n" );
+  }
+
+  hough_transform( img_path, theta_multiplier, print_times, print_lines );
+  for ( int i = 1; i < RUN_COUNT; ++i )
+    hough_transform( img_path, theta_multiplier, print_times, 0 );
 
   MPI_Finalize();
 
