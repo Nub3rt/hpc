@@ -4,7 +4,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "libs/stb_image.h"
 
-const double DEG2RAD = 3.1419 / 180.0;
+static const double DEG2RAD = 3.1419 / 180.0;
+static const double PEAK_THRESHOLD_RATIO = 0.8;
 
 int main( int argc, char** argv ) {
   if ( argc < 3 ) {
@@ -22,7 +23,7 @@ int main( int argc, char** argv ) {
   int center_x = w / 2;
   int center_y = h / 2;
 
-  // maximum distance in image from origo (origo in middle of image)
+  // Maximum distance in image from origo (origo in middle of image)
   double max_distance = sqrt( 2.0 ) * (h > w ? h : w) / 2.0;
   // rho range
   int acc_h = max_distance * 2.0;
@@ -36,11 +37,13 @@ int main( int argc, char** argv ) {
   // Voting phase
   for ( int y = 0; y < h; ++y ) {
     for ( int x = 0; x < w; ++x ) {
+
       if ( img[ y * w + x ] > 250 ) {
-        for ( int t = 0; t < acc_w; ++t ) {
+
+        for ( int t = 0; t < acc_w; ++t ) { // calculate rho for each theta
           double t_deg = t / (double)t_mult;
           double r = (x - center_x) * cos( t_deg * DEG2RAD ) + (y - center_y) * sin( t_deg * DEG2RAD );
-          acc[ ((int)(r + max_distance)) * acc_w + t ] += 1;
+          acc[ ((int)(r + max_distance)) * acc_w + t ] += 1; // calculate rho for each theta
         }
       }
     }
@@ -56,22 +59,25 @@ int main( int argc, char** argv ) {
       }
   }
 
-  // Select local maxima
-  int threshold = max_acc * 0.8;
+
+  int threshold = max_acc * PEAK_THRESHOLD_RATIO;
 
   int max_count = 50;
   int* rs = malloc( max_count * sizeof( int ) );
   double* ts = malloc( max_count * sizeof( double ) );
   int count = 0;
 
-
+  // Select local maxima
   for ( int r = 0; r < acc_h; ++r ) {
     for ( int t = 0; t < acc_w; ++t ) {
+
       if ( acc[ r * acc_w + t ] >= threshold ) {
+
         // Check if local maximum (9x9)
         int max = acc[ r * acc_w + t ];
         for ( int dr = -4; dr <= 4; ++dr ) {
           for ( int dt = -4; dt <= 4; ++dt ) {
+
             if ( r + dr >= 0 && r + dr < acc_h && t + dt >= 0 && t + dt < acc_w ) {
               int current = acc[ (r + dr) * acc_w + t + dt ];
               if ( current > max ) {
@@ -84,8 +90,9 @@ int main( int argc, char** argv ) {
         }
 
         if ( max > acc[ r * acc_w + t ] )
-          continue;
+          continue; // was not local maximum
 
+        // only save maximum if we still have space
         if ( count < max_count ) {
           rs[ count ] = r - max_distance;
           ts[ count ] = t / (double)t_mult;

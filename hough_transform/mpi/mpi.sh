@@ -61,14 +61,14 @@ job_id=$(cat <<EOS | qsub
 #PBS -l walltime=0:10:00
 #PBS -q shortCPUQ
 
-#PBS -o ${name}.o.${cores}x${edges}x${theta_multiplier}
-#PBS -e ${name}.e.${cores}x${edges}x${theta_multiplier}
+#PBS -o ../mpi_out/${name}.o.${cores}x${edges}x${theta_multiplier}
+#PBS -e ../mpi_out/${name}.e.${cores}x${edges}x${theta_multiplier}
 
 cd \$PBS_O_WORKDIR
 
 module load -s OpenMPI/4.1.1-GCC-11.2.0
 if [[ "$name.c" -nt "$name.out" ]]; then
-  mpicc -lm -Wall "$name.c" -o "$name.out"
+  mpicc -lm -Wall "$name.c" -o "$name.out" || { echo "Compilation failed, exiting..."; exit 1; }
 fi
 
 mpirun -n $cores "./$name.out" $img_path $theta_multiplier $print_time $print_lines
