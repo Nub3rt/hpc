@@ -5,6 +5,9 @@
 *.e.*
 *.out
 
+# Time data
+!hough_transform/mpi_out_*/*
+
 # Images
 *.jpg
 *.png

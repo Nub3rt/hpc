@@ -290,7 +290,7 @@ int main( int argc, char** argv ) {
   MPI_Init( NULL, NULL );
 
   if ( argc < 3 ) {
-    printf( "usage: %s <img_path> <theta_multiplier> [<print_time>] [<print_lines>]\n", argv[ 0 ] );
+    printf( "usage: %s <img_path> <theta_multiplier> [<print_times>] [<print_lines>]\n", argv[ 0 ] );
     MPI_Abort( MPI_COMM_WORLD, 1 );
   }
 
@@ -313,8 +313,9 @@ int main( int argc, char** argv ) {
       printf( "run_start,run_end,vote_start,vote_end,peaks_start,peaks_end\n" );
   }
 
+  int runs = RUN_COUNT * size;
   hough_transform( img_path, theta_multiplier, print_times, print_lines );
-  for ( int i = 1; i < RUN_COUNT; ++i )
+  for ( int i = 1; i < runs; ++i )
     hough_transform( img_path, theta_multiplier, print_times, 0 );
 
   MPI_Finalize();

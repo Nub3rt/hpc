@@ -43,7 +43,7 @@ int main( int argc, char** argv ) {
         for ( int t = 0; t < acc_w; ++t ) { // calculate rho for each theta
           double t_deg = t / (double)t_mult;
           double r = (x - center_x) * cos( t_deg * DEG2RAD ) + (y - center_y) * sin( t_deg * DEG2RAD );
-          acc[ ((int)(r + max_distance)) * acc_w + t ] += 1; // calculate rho for each theta
+          acc[ ((int)(r + max_distance)) * acc_w + t ] += 1; // increase the accumulator for (rho, theta)
         }
       }
     }
