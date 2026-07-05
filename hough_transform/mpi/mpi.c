@@ -77,7 +77,7 @@ void hough_transform( char* img_path, int t_mult, int print_times, int print_lin
   int acc_w = 180 * t_mult;
 
   // accumulator
-  int* acc = calloc( acc_h * acc_w, sizeof( int ) );
+  unsigned short int* acc = calloc( acc_h * acc_w, sizeof( unsigned short int ) );
 
 
 MPI_Barrier( MPI_COMM_WORLD );
@@ -110,7 +110,7 @@ double _time_vote_end = MPI_Wtime();
       MPI_IN_PLACE,
       acc,
       acc_w * acc_h,
-      MPI_INT,
+      MPI_UNSIGNED_SHORT,
       MPI_SUM,
       MPI_COMM_WORLD
   );
@@ -313,9 +313,8 @@ int main( int argc, char** argv ) {
       printf( "run_start,run_end,vote_start,vote_end,peaks_start,peaks_end\n" );
   }
 
-  int runs = RUN_COUNT * size;
   hough_transform( img_path, theta_multiplier, print_times, print_lines );
-  for ( int i = 1; i < runs; ++i )
+  for ( int i = 1; i < RUN_COUNT; ++i )
     hough_transform( img_path, theta_multiplier, print_times, 0 );
 
   MPI_Finalize();

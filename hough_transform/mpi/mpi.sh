@@ -6,12 +6,12 @@ print_time=0
 print_lines=0
 
 usage() {
-  echo "usage: $0 <cores> <img_path> <theta_multiplier> [-p <placement_strategy>] [-w] [-t] [-l]"
-  echo "  cores             : number of cores (mandatory)"
+  echo "usage: $0 <nodes> <img_path> <theta_multiplier> [-p <placement_strategy>] [-w <cores>] [-t] [-l]"
+  echo "  nodes             : number of nodes (mandatory)"
   echo "  img_path          : image path (mandatory)"
   echo "  theta_multiplier  : theta multiplier value (mandatory)"
-  echo "  -p                : PBS placement strategy"
-  echo "  -w                : watch job after submission"
+  echo "  -p <place>        : PBS placement strategy"
+  echo "  -w <cores>        : watch job after submission"
   echo "  -t                : executable prints time (this or -l)"
   echo "  -l                : executable prints lines (this or -t)"
   echo
@@ -22,18 +22,18 @@ if [ $# -lt 3 ]; then
   usage
 fi
 
-cores=$1
+nodes=$1
 img_path=$2
 theta_multiplier=$3
 shift 3
 
-while getopts "p:wtl" opt; do
+while getopts "p:w:tl" opt; do
   case $opt in
     p)
       placement="-l place=$OPTARG"
       ;;
     w)
-      watch=1
+      watch="$OPTARG"
       ;;
     t)
       print_time=1
@@ -54,34 +54,63 @@ fi
 
 
 name=$(basename $0 .sh)
+mkdir -p "../${name}_out"
 
 basepath=$(basename $img_path)
 edges=${basepath//[!0-9]/}
 
-job_id=$(cat <<EOS | qsub
+
+if [[ "$name.c" -nt "$name.out" ]]; then
+  module load -s OpenMPI/4.1.1-GCC-11.2.0
+  mpicc -lm -O2 -Wall "$name.c" -o "$name.out" || { echo "Compilation failed, exiting..."; exit 1; }
+fi
+
+
+run() {
+  job_script=$(mktemp)
+  cat > "$job_script" <<EOS
 #!/bin/bash
 
-#PBS -l select=1:ncpus=$cores:mem=8gb $placement
+#PBS -l select=$nodes:ncpus=$cores:mpiprocs=$cores:mem=8gb $placement
 #PBS -l walltime=0:30:00
 #PBS -q shortCPUQ
 
-#PBS -o ../${name}_out/${name}.o.${cores}x${edges}x${theta_multiplier}
-#PBS -e ../${name}_out/${name}.e.${cores}x${edges}x${theta_multiplier}
+#PBS -o ../${name}_out/${name}.o.${nodes}x${cores}x${edges}x${theta_multiplier}
+#PBS -e ../${name}_out/${name}.e.${nodes}x${cores}x${edges}x${theta_multiplier}
 
 cd \$PBS_O_WORKDIR
 
 module load -s OpenMPI/4.1.1-GCC-11.2.0
-if [[ "$name.c" -nt "$name.out" ]]; then
-  mpicc -lm -Wall "$name.c" -o "$name.out" || { echo "Compilation failed, exiting..."; exit 1; }
-fi
-
-mpirun -n $cores "./$name.out" $img_path $theta_multiplier $print_time $print_lines
+mpiexec \
+    --hostfile \$PBS_NODEFILE \
+    -n $total_cores           \
+    --map-by node             \
+    --bind-to core            \
+    --mca pml ob1             \
+    --mca btl tcp,self        \
+    --mca btl_tcp_if_include 192.168.108.0/23 \
+    "./$name.out" $img_path $theta_multiplier $print_time $print_lines
 
 EOS
-)
+
+  job_id=$(qsub "$job_script")
+  rm -f "$job_script"
+  echo "$job_id"
+}
+
 
 if [[ "$watch" -ne 0 ]]; then
+  cores="$watch"
+  total_cores=$((nodes * cores))
+  job_id=$(run)
   watch "qstat -f $job_id"
 else
-  echo $job_id
+  for cores in 16 8 4 2 1; do
+    total_cores=$((nodes * cores))
+    if [[ $total_cores -le 16 ]]; then
+      job_id=$(run)
+      echo    "$nodes $cores $edges $theta_multiplier"
+      echo -e "\t$job_id"
+    fi
+  done
 fi
