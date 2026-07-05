@@ -72,7 +72,7 @@ run() {
 #!/bin/bash
 
 #PBS -l select=$nodes:ncpus=$cores:mpiprocs=$cores:mem=8gb $placement
-#PBS -l walltime=0:30:00
+#PBS -l walltime=1:00:00
 #PBS -q shortCPUQ
 
 #PBS -o ../${name}_out/${name}.o.${nodes}x${cores}x${edges}x${theta_multiplier}
@@ -107,10 +107,8 @@ if [[ "$watch" -ne 0 ]]; then
 else
   for cores in 16 8 4 2 1; do
     total_cores=$((nodes * cores))
-    if [[ $total_cores -le 16 ]]; then
-      job_id=$(run)
-      echo    "$nodes $cores $edges $theta_multiplier"
-      echo -e "\t$job_id"
-    fi
+    job_id=$(run)
+    echo    "$nodes $cores $edges $theta_multiplier"
+    echo -e "\t$job_id"
   done
 fi

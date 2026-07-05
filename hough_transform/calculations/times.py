@@ -11,9 +11,6 @@ edges_data = {}
 for nodes in nodes_values:
     for cores in cores_values:
         for edges in edges_values:
-            if nodes * cores > 16:
-                continue
-
             filename = f"mpi.o.{nodes}x{cores}x{edges}x16"
             path = os.path.join("../mpi_out_edges", filename)
 
@@ -45,9 +42,6 @@ tmult_data = {}
 for nodes in nodes_values:
     for cores in cores_values:
         for tmult in tmult_values:
-            if nodes * cores > 16:
-                continue
-
             filename = f"mpi.o.{nodes}x{cores}x320000x{tmult}"
             path = os.path.join("../mpi_out_theta", filename)
 
