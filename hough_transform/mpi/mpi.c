@@ -117,9 +117,6 @@ double _time_vote_end = MPI_Wtime();
 
 
   // Find maximum accumulator value
-
-  // here not distributed by rows, simply divide
-  // continuous data between processes
   int start_r = rank * acc_h / size;
   int end_r = (rank + 1) * acc_h / size;
 

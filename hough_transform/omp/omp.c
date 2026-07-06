@@ -41,7 +41,9 @@ double _time_vote_start = omp_get_wtime();
 
 
   // Voting phase
-# pragma omp parallel for num_threads(cores) collapse(2)
+# pragma omp parallel for num_threads( cores ) collapse( 2 ) \
+    default( none ) \
+    shared( h, w, img, acc_w, t_mult, center_x, center_y, max_distance, acc )
   for ( int y = 0; y < h; ++y ) {
     for ( int x = 0; x < w; ++x ) {
 
@@ -65,7 +67,9 @@ double _time_vote_end = omp_get_wtime();
 
   // Find maximum accumulator value
   int max_acc = 0;
-#pragma omp parallel for num_threads(cores) collapse(2) reduction(max: max_acc)
+#pragma omp parallel for num_threads( cores ) collapse( 2 ) reduction( max: max_acc ) \
+    default( none ) \
+    shared( acc_h, acc_w, acc )
   for ( int r = 0; r < acc_h; ++r ) {
       for ( int t = 0; t < acc_w; ++t ) {
           if ( acc[ r * acc_w + t ] > max_acc )
@@ -86,7 +90,9 @@ double _time_peaks_start = omp_get_wtime();
 
 
   // Select local maxima
-#pragma omp parallel for num_threads(cores) collapse(2)
+#pragma omp parallel for num_threads( cores ) collapse( 2 ) \
+    default( none ) \
+    shared( acc_h, acc_w, acc, threshold, count, max_count, rs, ts, max_distance, t_mult )
   for ( int r = 0; r < acc_h; ++r ) {
     for ( int t = 0; t < acc_w; ++t ) {
 
