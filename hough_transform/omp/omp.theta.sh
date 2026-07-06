@@ -10,15 +10,15 @@ img_path=$1
 name=$(basename $0 .theta.sh)
 
 if [[ "$name.c" -nt "$name.out" ]]; then
-  module load -s OpenMPI/4.1.1-GCC-11.2.0
-  mpicc -lm -O2 -Wall "$name.c" -o "$name.out" || { echo "Compilation failed, exiting..."; exit 1; }
+  module load GCC/11.2.0 GCCcore/11.2.0
+  gcc -fopenmp -lm -O2 -Wall "$name.c" -o "$name.out" || { echo "Compilation failed, exiting..."; exit 1; }
 fi
 
 for nodes in 16 8 4 2 1; do
   for theta_multiplier in 16 8 4 2 1; do
     jobcount=$(qstat | grep norbert.*shortCPUQ | wc -l)
     while [[ $jobcount -gt 5 ]]; do
-      sleep 10
+      sleep 20
       jobcount=$(qstat | grep norbert.*shortCPUQ | wc -l)
     done
 

@@ -1,24 +1,24 @@
 #!/bin/bash
 
 if [[ $# -lt 1 ]]; then
-  echo "usage: $0 <img_path> [<placement_strategy>]"
+  echo "usage: $0 <theta_multiplier> [<placement_strategy>]"
   exit 1
 fi
 
-img_path=$1
+theta_multiplier=$1
 
-name=$(basename $0 .theta.sh)
+name=$(basename $0 .edges.sh)
 
 if [[ "$name.c" -nt "$name.out" ]]; then
-  module load -s OpenMPI/4.1.1-GCC-11.2.0
-  mpicc -lm -O2 -Wall "$name.c" -o "$name.out" || { echo "Compilation failed, exiting..."; exit 1; }
+  module load GCC/11.2.0 GCCcore/11.2.0
+  gcc -fopenmp -lm -O2 -Wall "$name.c" -o "$name.out" || { echo "Compilation failed, exiting..."; exit 1; }
 fi
 
 for nodes in 16 8 4 2 1; do
-  for theta_multiplier in 16 8 4 2 1; do
+  for img_path in ../image/*; do
     jobcount=$(qstat | grep norbert.*shortCPUQ | wc -l)
     while [[ $jobcount -gt 5 ]]; do
-      sleep 10
+      sleep 15
       jobcount=$(qstat | grep norbert.*shortCPUQ | wc -l)
     done
 

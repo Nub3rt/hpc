@@ -125,10 +125,10 @@ double _time_vote_end = MPI_Wtime();
 
   int max_acc = 0;
   for ( int r = start_r; r < end_r; ++r ) {
-      for ( int t = 0; t < acc_w; ++t ) {
-          if ( acc[ r * acc_w + t ] > max_acc )
-              max_acc = acc[ r * acc_w + t ];
-      }
+    for ( int t = 0; t < acc_w; ++t ) {
+      if ( acc[ r * acc_w + t ] > max_acc )
+        max_acc = acc[ r * acc_w + t ];
+    }
   }
 
   // Reduce maximum accumulator value, and broadcast back to all processes
@@ -314,8 +314,9 @@ int main( int argc, char** argv ) {
   }
 
   hough_transform( img_path, theta_multiplier, print_times, print_lines );
-  for ( int i = 1; i < RUN_COUNT; ++i )
-    hough_transform( img_path, theta_multiplier, print_times, 0 );
+  if ( print_times )
+    for ( int i = 1; i < RUN_COUNT; ++i )
+      hough_transform( img_path, theta_multiplier, print_times, 0 );
 
   MPI_Finalize();
 

@@ -17,15 +17,15 @@ fi
 for nodes in 16 8 4 2 1; do
   for img_path in ../image/*; do
     jobcount=$(qstat | grep norbert.*shortCPUQ | wc -l)
-    while [[ $jobcount -gt 25 ]]; do
+    while [[ $jobcount -gt 5 ]]; do
       sleep 5
       jobcount=$(qstat | grep norbert.*shortCPUQ | wc -l)
     done
 
     if [[ $# -gt 1 ]]; then
-      ./mpi.sh "$nodes" "$img_path" "$theta_multiplier" -p "$2" -t
+      "./$name.sh" "$nodes" "$img_path" "$theta_multiplier" -p "$2" -t
     else
-      ./mpi.sh "$nodes" "$img_path" "$theta_multiplier" -t
+      "./$name.sh" "$nodes" "$img_path" "$theta_multiplier" -t
     fi
   done
 done
